@@ -1,0 +1,38 @@
+Invoking GenerateIacRoleRecommendation with plan /tmp/tf-iam-rec-3954195043/tfplan.json...
+Response:
+{
+  "resourceRoles": [
+    {
+      "resourceName": "projects/gcp-project",
+      "roles": [
+        {
+          "name": "roles/iam.infrastructureAdmin",
+          "permissions": [
+            "networksecurity.gatewaySecurityPolicies.delete",
+            "networksecurity.gatewaySecurityPolicies.get",
+            "networksecurity.gatewaySecurityPolicies.create",
+            "networksecurity.operations.get"
+          ]
+        },
+        {
+          "name": "roles/iam.serviceAccountUser",
+          "permissions": [
+            "iam.serviceAccounts.actAs"
+          ]
+        }
+      ]
+    }
+  ],
+  "[cloud_iam.policy_ai.iampolicyai.IacRolesAdditionalInfo.additional_info]": {
+    "resourceInfos": [
+      {
+        "resourceName": "projects/gcp-project",
+        "createResourceTypes": [
+          "google_network_security_gateway_security_policy"
+        ]
+      }
+    ]
+  }
+}
+Duration: 26 sec.
+
