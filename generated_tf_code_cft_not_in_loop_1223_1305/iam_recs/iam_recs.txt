@@ -1,0 +1,34 @@
+{
+  "resourceRoles": [
+    {
+      "resourceName": "projects/gcp-project",
+      "roles": [
+        {
+          "name": "roles/iam.serviceAccountUser",
+          "permissions": [
+            "iam.serviceAccounts.actAs"
+          ]
+        },
+        {
+          "name": "roles/iam.networkAdmin",
+          "permissions": [
+            "networksecurity.gatewaySecurityPolicies.get",
+            "networksecurity.gatewaySecurityPolicies.create",
+            "networksecurity.operations.get",
+            "networksecurity.gatewaySecurityPolicies.delete"
+          ]
+        }
+      ]
+    }
+  ],
+  "[cloud_iam.policy_ai.iampolicyai.IacRolesAdditionalInfo.additional_info]": {
+    "resourceInfos": [
+      {
+        "resourceName": "projects/gcp-project",
+        "createResourceTypes": [
+          "google_network_security_gateway_security_policy"
+        ]
+      }
+    ]
+  }
+}
