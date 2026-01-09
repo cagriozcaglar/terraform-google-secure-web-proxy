@@ -1,0 +1,114 @@
+apiVersion: blueprints.cloud.google.com/v1alpha1
+kind: TerraformBlueprintMetadata
+metadata:
+  name: terraform-google-secure-web-proxy
+  source:
+    type: git
+    location: https://github.com/GoogleCloudPlatform/terraform-google-secure-web-proxy # Example source
+  version: 1.0.0
+  actuationTool:
+    type: Terraform
+    versions: [ ">= 1.5.0" ]
+  title: Google Cloud Secure Web Proxy
+  descriptions:
+    tagline: Deploys a Secure Web Proxy gateway, security policy, and rules on Google Cloud.
+    detailed: |
+      This module simplifies the deployment of Google Cloud's Secure Web Proxy (SWP).
+      It creates a SWP gateway, a gateway security policy, and a set of configurable
+      security rules. It also supports optional TLS inspection by integrating with
+      Certificate Authority Service.
+  examples: [] # Add examples if available
+  labels:
+    gcp-product: secure-web-proxy
+    category: networking
+    complexity: medium
+spec:
+  requirements:
+    roles:
+      - level: Project
+        roles:
+          - roles/networkservices.admin
+          - roles/networksecurity.admin
+          - roles/privateca.viewer # Required if using TLS Inspection
+    services:
+      - networkservices.googleapis.com
+      - networksecurity.googleapis.com
+      - privateca.googleapis.com # Required if using TLS Inspection
+  interfaces:
+    variables:
+      - name: name
+        description: A unique name for the Secure Web Proxy gateway and its associated resources. If not provided, no resources will be created.
+        type: String
+        required: true
+        defaultValue: null
+      - name: network
+        description: The self-link of the VPC network to which the Secure Web Proxy gateway is attached. A proxy-only subnetwork must exist in this network and region for the gateway to function. If not provided, no resources will be created.
+        type: String
+        required: true
+        defaultValue: null
+      - name: project_id
+        description: The project ID to deploy the Secure Web Proxy resources in. If not provided, the provider project is used.
+        type: String
+        required: false
+        defaultValue: null
+      - name: region
+        description: The region to deploy the Secure Web Proxy resources in. If not provided, the provider region is used.
+        type: String
+        required: false
+        defaultValue: null
+      - name: ports
+        description: A list of ports that the gateway will listen on.
+        type: List<Number>
+        required: false
+        defaultValue: [443]
+      - name: security_policy_rules
+        description: |
+          A list of security policy rules to be created and attached to the gateway. Rules are evaluated in order of priority, from lowest to highest.
+          Each rule object has the following fields:
+          - `name`: (string) A unique name for the rule.
+          - `description`: (string, optional) A description for the rule. Defaults to 'Managed by Terraform'.
+          - `enabled`: (bool, optional) Whether the rule is enabled. Defaults to `true`.
+          - `priority`: (number) The priority of the rule, from 0 to 999. Lower numbers have higher precedence.
+          - `session_matcher`: (string) A CEL expression for session matching. For example, `host() == 'example.com'`.
+          - `application_matcher`: (string, optional) A CEL expression for application matching. Defaults to `true`.
+          - `basic_profile`: (string) The basic profile action. Must be 'ALLOW' or 'DENY'.
+          - `tls_inspection_enabled`: (bool, optional) Whether to enable TLS inspection for this rule. Defaults to `false`. Requires `ca_pool` to be set on the module.
+        type: List<Object>
+        required: false
+        defaultValue: []
+      - name: ca_pool
+        description: "The resource ID of the Certificate Authority Service CA Pool to use for TLS inspection. If set, a TLS inspection policy will be created and associated with the gateway security policy. Format 'projects/{project}/locations/{location}/caPools/{ca_pool}'."
+        type: String
+        required: false
+        defaultValue: null
+      - name: scope
+        description: A scope defines context for the gateway. If not provided, the gateway name will be used as the scope.
+        type: String
+        required: false
+        defaultValue: null
+      - name: labels
+        description: A map of labels to apply to the gateway resource.
+        type: Map<String>
+        required: false
+        defaultValue: {}
+    variableGroups:
+      - name: "Core Configuration"
+        description: "Essential settings for the Secure Web Proxy deployment."
+        variables: [ "name", "network", "project_id", "region" ]
+      - name: "Gateway Settings"
+        description: "Configuration for the SWP Gateway instance."
+        variables: [ "ports", "scope", "labels" ]
+      - name: "Security Policy"
+        description: "Define the rules for traffic inspection and filtering."
+        variables: [ "security_policy_rules", "ca_pool" ]
+    outputs:
+      - name: gateway_id
+        description: The fully qualified ID of the Secure Web Proxy gateway.
+      - name: gateway_name
+        description: The name of the Secure Web Proxy gateway.
+      - name: security_policy_id
+        description: The fully qualified ID of the Secure Web Proxy security policy.
+      - name: security_policy_name
+        description: The name of the Secure Web Proxy security policy.
+      - name: tls_inspection_policy_id
+        description: The ID of the created TLS Inspection Policy. This will be null if no CA pool was provided or the module was disabled.
