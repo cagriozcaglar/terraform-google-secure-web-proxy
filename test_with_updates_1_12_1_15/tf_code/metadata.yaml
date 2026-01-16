@@ -1,0 +1,143 @@
+# Copyright 2024 Google LLC
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+apiVersion: blueprints.cloud.google.com/v1alpha1
+kind: TerraformBlueprintMetadata
+metadata:
+  name: terraform-google-secure-web-proxy
+  source:
+    type: git
+    location: https://github.com/GoogleCloudPlatform/terraform-google-secure-web-proxy.git
+  version: 1.0.0
+  actuationTool:
+    type: Terraform
+    versions:
+    - ">= 1.3"
+  title: Secure Web Proxy
+  description:
+    tagline: Deploys a Google Cloud Secure Web Proxy gateway with a configurable security policy.
+    detailed: This module creates a Secure Web Proxy gateway, a security policy, and a set of rules to control outbound traffic from a VPC network. It supports TLS inspection by integrating with Certificate Manager.
+spec:
+  requirements:
+    roles:
+    - level: Project
+      roles:
+      - roles/networkservices.admin
+      - roles/networksecurity.admin
+      - roles/compute.networkViewer
+      - roles/certificatemanager.viewer
+    services:
+    - networkservices.googleapis.com
+    - networksecurity.googleapis.com
+    - compute.googleapis.com
+    - certificatemanager.googleapis.com
+  interfaces:
+    variables:
+    - name: gateway_description
+      description: A description for the Secure Web Proxy gateway resource.
+      varType: string
+      defaultValue: Secure Web Proxy gateway managed by Terraform.
+      required: false
+    - name: gateway_ports
+      description: A list of ports (1-65535) on which the gateway will receive traffic.
+      varType: list(number)
+      defaultValue:
+      - 443
+      required: false
+    - name: labels
+      description: A map of key-value pairs to apply as labels to the gateway.
+      varType: map(string)
+      defaultValue: {}
+      required: false
+    - name: name
+      description: A unique name to be used as a prefix for the created gateway and
+        security policy resources. If not provided, no resources will be created.
+      varType: string
+      required: true
+    - name: network
+      description: The self-link of the VPC network to which the gateway is attached,
+        e.g. projects/PROJECT_ID/global/networks/NETWORK_NAME. If not provided,
+        no resources will be created.
+      varType: string
+      required: true
+    - name: policy_description
+      description: A description for the Secure Web Proxy security policy resource.
+      varType: string
+      defaultValue: Secure Web Proxy security policy managed by Terraform.
+      required: false
+    - name: project_id
+      description: The GCP project ID where the Secure Web Proxy resources will be
+        created. If not provided, the provider project will be used.
+      varType: string
+      required: false
+    - name: region
+      description: The GCP region where the Secure Web Proxy gateway will be deployed.
+        If not provided, the provider region will be used.
+      varType: string
+      required: false
+    - name: rules
+      description: |
+        A list of security policy rule objects to create. Rules are evaluated in order of priority, from lowest to highest number.
+        Each rule object has the following attributes:
+        - `name` (string): The name of the rule.
+        - `description` (string, optional): A description for the rule. Defaults to 'Managed by Terraform'.
+        - `enabled` (bool, optional): Whether the rule is enabled. Defaults to true.
+        - `priority` (number): The priority of the rule (0-1000). Lower numbers have higher priority.
+        - `session_matcher` (string): A CEL expression to match sessions (e.g., `host().endsWith('.example.com')`).
+        - `application_matcher` (string, optional): A CEL expression to match applications (e.g., `tls=true`).
+        - `basic_profile` (string): The action to take. Must be 'ALLOW' or 'DENY'.
+        - `tls_inspection_enabled` (bool, optional): Whether to enable TLS inspection for traffic matching this rule. Defaults to false.
+      varType: list(object)
+      defaultValue: []
+      required: false
+    - name: scope
+      description: A user-defined name for the scope of the gateway. This is used
+        to organize gateways.
+      varType: string
+      required: false
+    - name: tls_inspection_policy_certificate_id
+      description: The self-link of a Certificate Manager certificate to use for TLS
+        inspection. If provided, TLS inspection is enabled on the policy.
+      varType: string
+      required: false
+    variableGroups:
+    - name: Gateway Configuration
+      description: Basic settings for the Secure Web Proxy Gateway.
+      variables:
+      - name
+      - network
+      - region
+      - project_id
+      - gateway_ports
+      - gateway_description
+      - scope
+      - labels
+    - name: Security Policy Configuration
+      description: Settings for the security policy and its rules.
+      variables:
+      - policy_description
+      - rules
+      - tls_inspection_policy_certificate_id
+    outputs:
+    - name: gateway_id
+      description: The fully qualified identifier for the Secure Web Proxy gateway.
+    - name: gateway_name
+      description: The name of the Secure Web Proxy gateway.
+    - name: policy_id
+      description: The fully qualified identifier for the gateway security policy.
+    - name: policy_name
+      description: The name of the gateway security policy.
+    - name: rule_ids
+      description: A map of the security policy rule names to their fully qualified
+        identifiers.
